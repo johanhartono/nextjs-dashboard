@@ -1,5 +1,5 @@
 import type { NextAuthConfig } from 'next-auth';
- 
+
 export const authConfig = {
   pages: {
     signIn: '/login',
@@ -8,14 +8,20 @@ export const authConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
-      if (isOnDashboard) {
-        if (isLoggedIn) return true;
-        return false; // Redirect unauthenticated users to login page
-      } else if (isLoggedIn) {
+
+      if (isOnDashboard && !isLoggedIn) {
+        return false; // Redirect to login if not logged in
+      }
+
+      if (!isOnDashboard && isLoggedIn) {
         return Response.redirect(new URL('/dashboard', nextUrl));
       }
+
       return true;
     },
+    async redirect({ url, baseUrl }) {
+      return url.startsWith(baseUrl) ? url : baseUrl + '/dashboard';
+    },
   },
-  providers: [], // Add providers with an empty array for now
+  providers: [], // Ensure you add a provider here
 } satisfies NextAuthConfig;
